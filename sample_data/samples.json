@@ -1,0 +1,44 @@
+[
+  {
+    "filename": "sample_english.png",
+    "lang": "en",
+    "script": "Latin",
+    "text": "Ancient manuscripts preserve the knowledge and philosophy of centuries.",
+    "translation_en": "Ancient manuscripts preserve the knowledge and philosophy of centuries."
+  },
+  {
+    "filename": "sample_hindi.png",
+    "lang": "hi",
+    "script": "Devanagari",
+    "text": "यह एक प्राचीन पांडुलिपि का नमूना है।",
+    "translation_en": "This is a sample of an ancient manuscript."
+  },
+  {
+    "filename": "sample_sanskrit.png",
+    "lang": "sa",
+    "script": "Devanagari",
+    "text": "सर्वे भवन्तु सुखिनः सर्वे सन्तु निरामयाः ।",
+    "translation_en": "May all beings be happy, may all beings be free from illness."
+  },
+  {
+    "filename": "sample_kannada.png",
+    "lang": "kn",
+    "script": "Kannada",
+    "text": "ಪ್ರಾಚೀನ ಹಸ್ತಪ್ರತಿಗಳು ಭಾರತದ ಇತಿಹಾಸವನ್ನು ತಿಳಿಸುತ್ತವೆ.",
+    "translation_en": "Ancient manuscripts tell the history of India."
+  },
+  {
+    "filename": "sample_tamil.png",
+    "lang": "ta",
+    "script": "Tamil",
+    "text": "பண்டைய கையெழுத்துப் பிரதிகள் இந்தியாவின் வரலாற்றைக் கூறுகின்றன.",
+    "translation_en": "Ancient manuscripts tell the history of India."
+  },
+  {
+    "filename": "sample_telugu.png",
+    "lang": "te",
+    "script": "Telugu",
+    "text": "పురాతన రాతప్రతులు భారతదేశ చరిత్రను తెలియజేస్తాయి.",
+    "translation_en": "Ancient manuscripts convey the history of India."
+  }
+]

@@ -1,0 +1,30 @@
+# Python cache and byte-compiled files
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Environments
+.env
+.venv
+env/
+venv/
+ENV/
+
+# Large model checkpoints and downloads
+models/
+*.bin
+*.safetensors
+*.pt
+*.pth
+
+# Streamlit run files
+.streamlit/secrets.toml
+
+# OS generated
+Thumbs.db
+.DS_Store
+

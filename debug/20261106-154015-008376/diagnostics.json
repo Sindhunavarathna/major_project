@@ -1,0 +1,55 @@
+{
+  "input_size_px": [
+    800,
+    200
+  ],
+  "processed_size_px": [
+    800,
+    200
+  ],
+  "preprocessing": {
+    "deskew_applied": false,
+    "skew_angle": 0.0,
+    "denoise_applied": true,
+    "binarize_applied": false
+  },
+  "easyocr": {
+    "text": "Ancient manuscripts preserve the knowledge and philosophy",
+    "confidence": 0.7905,
+    "warning": null,
+    "region_count": 1
+  },
+  "trocr_on_processed_image": {
+    "text": "Ancient manuscripts preserve the knowledge and philosophy",
+    "mean_token_confidence": 0.9739,
+    "model_used": "microsoft/trocr-base-handwritten",
+    "warning": "Local Sanskrit TrOCR model not found at 'models\\sanskrit_trocr'. Falling back to base model 'microsoft/trocr-base-handwritten'."
+  },
+  "regions": [
+    {
+      "index": 1,
+      "bbox_xyxy": [
+        29,
+        84,
+        790,
+        126
+      ],
+      "crop_size_px": [
+        761,
+        42
+      ],
+      "easyocr_confidence": 0.7905175016882788,
+      "easyocr_text": "Ancient manuscripts preserve the knowledge and philosophy",
+      "crop_file": "crop_001.png",
+      "trocr_raw_output": "Ancient manuscripts preserve the knowledge and philosophy",
+      "trocr_mean_token_confidence": 0.9985,
+      "trocr_model_used": "microsoft/trocr-base-handwritten",
+      "trocr_warning": "Local Sanskrit TrOCR model not found at 'models\\sanskrit_trocr'. Falling back to base model 'microsoft/trocr-base-handwritten'."
+    }
+  ],
+  "artifacts": {
+    "original": "original.png",
+    "processed": "processed.png",
+    "easyocr_boxes": "easyocr_boxes.png"
+  }
+}

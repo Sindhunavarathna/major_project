@@ -1,0 +1,5 @@
+Language,Samples,Baseline_CER,Baseline_WER,OurModel_CER,OurModel_WER
+Kannada,10,100.00%,100.00%,100.00%,100.00%
+Tamil,10,100.00%,100.00%,100.00%,100.00%
+Telugu,10,100.00%,100.00%,100.00%,100.00%
+OVERALL (Macro-Avg),30,100.00%,100.00%,100.00%,100.00%

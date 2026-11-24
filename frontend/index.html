@@ -1,0 +1,752 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PolyScribe AI — Multilingual Handwritten Note Recognition & Translation</title>
+  
+  <!-- Inter Font -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Amiri:wght@400;700&display=swap" rel="stylesheet">
+  
+  <!-- Tailwind CSS via CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
+            arabic: ['Amiri', 'serif'],
+          },
+          colors: {
+            brand: {
+              50: '#EEF2FF',
+              100: '#E0E7FF',
+              200: '#C7D2FE',
+              500: '#6366F1',
+              600: '#4F46E5',
+              700: '#4338CA',
+              800: '#3730A3',
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background-color: #F8FAFC;
+    }
+    .custom-scrollbar::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-track {
+      background: #F1F5F9;
+      border-radius: 4px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+      background: #CBD5E1;
+      border-radius: 4px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+      background: #94A3B8;
+    }
+  </style>
+</head>
+<body class="min-h-screen bg-[#F8FAFC] text-slate-800 flex flex-col antialiased selection:bg-indigo-100 selection:text-indigo-900">
+
+  <!-- Minimal Navbar -->
+  <header class="w-full bg-white border-b border-slate-200/80 sticky top-0 z-50 shadow-[0_1px_2px_rgba(0,0,0,0.03)]">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div class="w-9 h-9 rounded-xl bg-indigo-600 flex items-center justify-center text-white font-black text-lg shadow-sm shadow-indigo-200">
+          P
+        </div>
+        <div>
+          <h1 class="text-base font-bold text-slate-900 tracking-tight leading-none flex items-center gap-2">
+            PolyScribe AI
+            <span class="text-[10px] font-semibold text-indigo-700 bg-indigo-50 border border-indigo-200/70 px-2 py-0.5 rounded-full">v2.0</span>
+          </h1>
+          <p class="text-xs text-slate-500 font-normal mt-0.5">Multilingual Handwritten Note Recognition &amp; Translation</p>
+        </div>
+      </div>
+
+      <!-- Right Nav Status & Controls -->
+      <div class="flex items-center gap-3">
+        <!-- Model Toggle (Custom vs Baseline) -->
+        <div class="hidden sm:flex items-center bg-slate-100 p-1 rounded-xl border border-slate-200 text-xs font-semibold">
+          <button id="toggleCustomBtn" onclick="setModelMode('custom')" class="px-3 py-1 rounded-lg bg-white text-indigo-600 shadow-sm font-bold transition">
+            Custom CRNN
+          </button>
+          <button id="toggleBaseBtn" onclick="setModelMode('baseline')" class="px-3 py-1 rounded-lg text-slate-600 hover:text-slate-900 transition">
+            Baseline EasyOCR
+          </button>
+        </div>
+
+        <!-- System Status Dot -->
+        <div class="flex items-center gap-1.5 px-3 py-1 bg-emerald-50 border border-emerald-200/60 rounded-full text-[11px] font-semibold text-emerald-700">
+          <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+          Ready
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Hidden File & Camera Inputs -->
+  <input type="file" id="fileInput" accept="image/*" class="hidden" onchange="handleFileSelect(event)">
+  <input type="file" id="cameraInput" accept="image/*" capture="environment" class="hidden" onchange="handleFileSelect(event)">
+
+  <!-- Main View Area -->
+  <main class="flex-1 flex flex-col justify-center">
+
+    <!-- ========================================== -->
+    <!-- STATE 1: BEFORE UPLOAD (Centered Hero Card) -->
+    <!-- ========================================== -->
+    <section id="state1" class="w-full flex-1 flex flex-col items-center justify-center px-4 py-10 transition-all duration-300">
+      <div class="w-full max-w-xl flex flex-col items-center text-center">
+        
+        <!-- Large Upload Card -->
+        <div id="dropZone" 
+             onclick="document.getElementById('fileInput').click()"
+             class="w-full bg-white rounded-3xl border-2 border-dashed border-slate-300 hover:border-indigo-500 p-10 sm:p-12 shadow-sm hover:shadow-md transition-all duration-200 cursor-pointer group flex flex-col items-center justify-center">
+          
+          <!-- Upload Icon -->
+          <div class="w-16 h-16 rounded-2xl bg-indigo-50 text-indigo-600 group-hover:bg-indigo-600 group-hover:text-white flex items-center justify-center transition-all duration-200 mb-5 shadow-sm group-hover:scale-105">
+            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
+            </svg>
+          </div>
+
+          <h2 class="text-base sm:text-lg font-bold text-slate-800 group-hover:text-indigo-600 transition-colors">
+            Drag &amp; drop a handwritten note or click to upload
+          </h2>
+          <p class="text-xs sm:text-sm text-slate-400 mt-2 max-w-sm">
+            Upload scans or camera photos of handwritten notes, palm-leaf folios, and historical manuscripts
+          </p>
+
+          <!-- Action Buttons Inside Card -->
+          <div class="mt-6 flex flex-wrap items-center justify-center gap-3" onclick="event.stopPropagation()">
+            <button onclick="document.getElementById('fileInput').click()" class="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold rounded-xl shadow-sm hover:shadow transition flex items-center gap-2">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
+              Browse Files
+            </button>
+            <button onclick="document.getElementById('cameraInput').click()" class="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-xl border border-slate-200 transition flex items-center gap-2">
+              <svg class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+              Use Camera
+            </button>
+          </div>
+
+        </div>
+
+        <!-- Language Selector Chips -->
+        <div class="mt-7 flex flex-col items-center">
+          <span class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2.5">Script / Language Target</span>
+          <div class="flex flex-wrap items-center justify-center gap-2 max-w-xl">
+            <button type="button" onclick="setScriptHint('auto')" id="chip-auto" class="script-chip px-3.5 py-1.5 rounded-full text-xs font-bold border transition shadow-xs bg-indigo-600 text-white border-indigo-600">
+              ✨ Auto-Detect
+            </button>
+            <button type="button" onclick="setScriptHint('kannada')" id="chip-kannada" class="script-chip px-3.5 py-1.5 rounded-full text-xs font-semibold border transition shadow-xs bg-white text-slate-700 border-slate-200 hover:border-indigo-300">
+              🇮🇳 Kannada
+            </button>
+            <button type="button" onclick="setScriptHint('tamil')" id="chip-tamil" class="script-chip px-3.5 py-1.5 rounded-full text-xs font-semibold border transition shadow-xs bg-white text-slate-700 border-slate-200 hover:border-indigo-300">
+              🇮🇳 Tamil
+            </button>
+            <button type="button" onclick="setScriptHint('telugu')" id="chip-telugu" class="script-chip px-3.5 py-1.5 rounded-full text-xs font-semibold border transition shadow-xs bg-white text-slate-700 border-slate-200 hover:border-indigo-300">
+              🇮🇳 Telugu
+            </button>
+            <button type="button" onclick="setScriptHint('arabic')" id="chip-arabic" class="script-chip px-3.5 py-1.5 rounded-full text-xs font-semibold border transition shadow-xs bg-white text-slate-700 border-slate-200 hover:border-indigo-300">
+              🇦🇪 Arabic
+            </button>
+            <button type="button" onclick="setScriptHint('german')" id="chip-german" class="script-chip px-3.5 py-1.5 rounded-full text-xs font-semibold border transition shadow-xs bg-white text-slate-700 border-slate-200 hover:border-indigo-300">
+              🇩🇪 German
+            </button>
+            <button type="button" onclick="setScriptHint('devanagari')" id="chip-devanagari" class="script-chip px-3.5 py-1.5 rounded-full text-xs font-semibold border transition shadow-xs bg-white text-slate-700 border-slate-200 hover:border-indigo-300">
+              🇮🇳 Sanskrit / Devanagari
+            </button>
+          </div>
+
+          <!-- Quick Try Sample Links -->
+          <div class="mt-4 flex flex-wrap items-center justify-center gap-2 text-xs text-slate-400">
+            <span>Or test with a sample note:</span>
+            <button onclick="loadSample('kannada')" class="text-indigo-600 hover:text-indigo-800 font-semibold underline">Kannada</button>
+            <span>&bull;</span>
+            <button onclick="loadSample('tamil')" class="text-indigo-600 hover:text-indigo-800 font-semibold underline">Tamil</button>
+            <span>&bull;</span>
+            <button onclick="loadSample('telugu')" class="text-indigo-600 hover:text-indigo-800 font-semibold underline">Telugu</button>
+            <span>&bull;</span>
+            <button onclick="loadSample('arabic')" class="text-indigo-600 hover:text-indigo-800 font-semibold underline">Arabic</button>
+            <span>&bull;</span>
+            <button onclick="loadSample('german')" class="text-indigo-600 hover:text-indigo-800 font-semibold underline">German</button>
+            <span>&bull;</span>
+            <button onclick="loadSample('devanagari')" class="text-indigo-600 hover:text-indigo-800 font-semibold underline">Sanskrit</button>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ========================================== -->
+    <!-- STATE 2: AFTER UPLOAD (Compact Strip + Stepper + 2-Column Results) -->
+    <!-- ========================================== -->
+    <section id="state2" class="hidden w-full max-w-6xl mx-auto px-4 sm:px-6 py-6 space-y-5 transition-all duration-300">
+      
+      <!-- Compact Upload Strip -->
+      <div class="bg-white rounded-2xl border border-slate-200/90 p-4 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div class="flex items-center gap-3.5 min-w-0">
+          <img id="stripThumbnail" src="" alt="Thumbnail" class="w-12 h-12 rounded-xl object-cover border border-slate-200 shadow-xs flex-shrink-0 bg-slate-50">
+          <div class="min-w-0">
+            <h3 id="stripFileName" class="text-xs sm:text-sm font-bold text-slate-800 truncate">note.jpg</h3>
+            <p id="stripMetaText" class="text-[11px] text-slate-400 font-mono mt-0.5">Analyzing note with PolyScribe AI...</p>
+          </div>
+        </div>
+
+        <!-- Language Override Buttons directly in Strip -->
+        <div class="flex flex-wrap items-center gap-1.5">
+          <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mr-1">Language:</span>
+          <button type="button" onclick="setScriptHintAndRerun('auto')" id="strip-chip-auto" class="strip-chip px-2.5 py-1 rounded-lg text-xs font-bold border transition bg-indigo-600 text-white border-indigo-600">Auto</button>
+          <button type="button" onclick="setScriptHintAndRerun('kannada')" id="strip-chip-kannada" class="strip-chip px-2.5 py-1 rounded-lg text-xs font-semibold border transition bg-white text-slate-700 border-slate-200 hover:border-indigo-300">Kannada</button>
+          <button type="button" onclick="setScriptHintAndRerun('tamil')" id="strip-chip-tamil" class="strip-chip px-2.5 py-1 rounded-lg text-xs font-semibold border transition bg-white text-slate-700 border-slate-200 hover:border-indigo-300">Tamil</button>
+          <button type="button" onclick="setScriptHintAndRerun('telugu')" id="strip-chip-telugu" class="strip-chip px-2.5 py-1 rounded-lg text-xs font-semibold border transition bg-white text-slate-700 border-slate-200 hover:border-indigo-300">Telugu</button>
+          <button type="button" onclick="setScriptHintAndRerun('arabic')" id="strip-chip-arabic" class="strip-chip px-2.5 py-1 rounded-lg text-xs font-semibold border transition bg-white text-slate-700 border-slate-200 hover:border-indigo-300">Arabic</button>
+          <button type="button" onclick="setScriptHintAndRerun('german')" id="strip-chip-german" class="strip-chip px-2.5 py-1 rounded-lg text-xs font-semibold border transition bg-white text-slate-700 border-slate-200 hover:border-indigo-300">German</button>
+          <button type="button" onclick="setScriptHintAndRerun('devanagari')" id="strip-chip-devanagari" class="strip-chip px-2.5 py-1 rounded-lg text-xs font-semibold border transition bg-white text-slate-700 border-slate-200 hover:border-indigo-300">Sanskrit</button>
+
+          <!-- Change Image Button -->
+          <button onclick="resetToState1()" class="ml-2 py-1.5 px-3 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-xl border border-slate-200 transition flex items-center gap-1.5">
+            <svg class="w-3.5 h-3.5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
+            Change Image
+          </button>
+        </div>
+      </div>
+
+      <!-- Pipeline Progress Stepper -->
+      <div class="bg-white rounded-2xl border border-slate-200/90 p-4 sm:p-5 shadow-sm">
+        <div class="flex items-center justify-between mb-3 border-b border-slate-100 pb-2">
+          <span class="text-xs font-bold uppercase tracking-wider text-slate-400">Pipeline Execution Stepper</span>
+          <span id="stepperTotalTime" class="text-xs font-extrabold text-indigo-600 bg-indigo-50 border border-indigo-200/80 px-2.5 py-0.5 rounded-full">
+            Total: 0ms
+          </span>
+        </div>
+
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+          <!-- Step 1: Preprocess -->
+          <div id="stepPreprocess" class="p-3 rounded-xl border border-slate-200 bg-slate-50 transition-all">
+            <div class="flex items-center justify-between">
+              <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Step 1</span>
+              <span class="step-icon text-xs text-slate-400">⏳</span>
+            </div>
+            <div class="text-xs font-bold text-slate-800 mt-1">Preprocess</div>
+            <div class="step-time text-[11px] font-mono text-slate-500 mt-0.5">Waiting...</div>
+          </div>
+
+          <!-- Step 2: Script Classification -->
+          <div id="stepScript" class="p-3 rounded-xl border border-slate-200 bg-slate-50 transition-all">
+            <div class="flex items-center justify-between">
+              <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Step 2</span>
+              <span class="step-icon text-xs text-slate-400">⏳</span>
+            </div>
+            <div class="text-xs font-bold text-slate-800 mt-1">Script ID</div>
+            <div class="step-time text-[11px] font-mono text-slate-500 mt-0.5">Waiting...</div>
+          </div>
+
+          <!-- Step 3: Recognition / OCR -->
+          <div id="stepOCR" class="p-3 rounded-xl border border-slate-200 bg-slate-50 transition-all">
+            <div class="flex items-center justify-between">
+              <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Step 3</span>
+              <span class="step-icon text-xs text-slate-400">⏳</span>
+            </div>
+            <div class="text-xs font-bold text-slate-800 mt-1">Recognize</div>
+            <div class="step-time text-[11px] font-mono text-slate-500 mt-0.5">Waiting...</div>
+          </div>
+
+          <!-- Step 4: Translation -->
+          <div id="stepTranslate" class="p-3 rounded-xl border border-slate-200 bg-slate-50 transition-all">
+            <div class="flex items-center justify-between">
+              <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Step 4</span>
+              <span class="step-icon text-xs text-slate-400">⏳</span>
+            </div>
+            <div class="text-xs font-bold text-slate-800 mt-1">Translate</div>
+            <div class="step-time text-[11px] font-mono text-slate-500 mt-0.5">Waiting...</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Results View: Clean Two-Column Card -->
+      <div id="resultsContainer" class="hidden grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+        <!-- LEFT COLUMN: Original Image -->
+        <div class="bg-white rounded-3xl border border-slate-200/90 p-5 shadow-sm flex flex-col space-y-4">
+          <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+            <div class="flex items-center gap-2">
+              <span class="w-2.5 h-2.5 rounded-full bg-slate-400"></span>
+              <h3 class="text-xs font-bold uppercase tracking-wider text-slate-600">Original Manuscript</h3>
+            </div>
+            <span id="badgeScript" class="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-600 border border-slate-200">
+              Script: Auto
+            </span>
+          </div>
+
+          <!-- Image Container -->
+          <div class="flex-1 min-h-[300px] flex items-center justify-center p-2 bg-[#F8FAFC] rounded-2xl border border-slate-200/80 overflow-hidden">
+            <img id="resultImagePreview" src="" alt="Manuscript Source" class="max-h-[500px] w-auto max-w-full rounded-xl object-contain shadow-xs">
+          </div>
+
+          <!-- Footer Metadata -->
+          <div class="flex items-center justify-between text-[11px] text-slate-400 font-mono pt-1">
+            <span id="metaEngineUsed">Engine: Indic-CRNN / TrOCR</span>
+            <span id="metaResolution">High-Resolution Normalized</span>
+          </div>
+        </div>
+
+        <!-- RIGHT COLUMN: Language Badge + Recognition + Translation -->
+        <div class="bg-white rounded-3xl border border-slate-200/90 p-5 shadow-sm flex flex-col space-y-5">
+          
+          <!-- Detected Language Badge with Confidence -->
+          <div class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 pb-3">
+            <div class="flex items-center gap-2">
+              <span class="text-xs font-bold uppercase tracking-wider text-slate-400">Detected Language</span>
+              <span id="badgeLanguage" class="px-3 py-1 rounded-full text-xs font-extrabold bg-emerald-600 text-white shadow-xs flex items-center gap-1.5">
+                ✓ Detecting...
+              </span>
+            </div>
+
+            <!-- Export Actions -->
+            <div class="flex items-center gap-2">
+              <button onclick="downloadReport('pdf')" class="py-1.5 px-3 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-xs font-semibold rounded-lg border border-indigo-200/70 transition flex items-center gap-1">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                PDF
+              </button>
+              <button onclick="downloadReport('txt')" class="py-1.5 px-3 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-lg border border-slate-200 transition flex items-center gap-1">
+                <svg class="w-3.5 h-3.5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                TXT
+              </button>
+            </div>
+          </div>
+
+          <!-- RECOGNIZED TEXT SECTION -->
+          <div class="space-y-2">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-2">
+                <h4 class="text-xs font-bold uppercase tracking-wider text-slate-500">Recognized Original Text</h4>
+                <span id="textDirectionBadge" class="text-[10px] bg-slate-100 text-slate-600 px-2 py-0.5 rounded font-mono">LTR</span>
+              </div>
+              <button id="copyRecBtn" onclick="copyToClipboard('recognizedTextOutput', this)" class="text-xs text-indigo-600 hover:text-indigo-800 font-semibold flex items-center gap-1 transition">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+                Copy Text
+              </button>
+            </div>
+
+            <!-- Line-by-line container with greyed-out low-confidence lines -->
+            <div id="recognizedTextOutput" dir="ltr" class="custom-scrollbar text-slate-800 text-sm whitespace-pre-wrap leading-relaxed max-h-56 overflow-y-auto p-3.5 bg-slate-50 rounded-2xl border border-slate-200/80 space-y-2">
+              <!-- Injected by JavaScript -->
+            </div>
+          </div>
+
+          <!-- ENGLISH TRANSLATION SECTION -->
+          <div class="space-y-2 flex-1 flex flex-col">
+            <div class="flex items-center justify-between">
+              <h4 class="text-xs font-bold uppercase tracking-wider text-slate-500">English Translation</h4>
+              <button id="copyTransBtn" onclick="copyToClipboard('translationOutput', this)" class="text-xs text-indigo-600 hover:text-indigo-800 font-semibold flex items-center gap-1 transition">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+                Copy Translation
+              </button>
+            </div>
+
+            <div id="translationOutput" class="custom-scrollbar flex-1 text-slate-800 text-sm whitespace-pre-wrap leading-relaxed min-h-[100px] max-h-64 overflow-y-auto p-4 bg-indigo-50/30 rounded-2xl border border-indigo-100/80 font-normal">
+              <!-- Injected by JavaScript -->
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+
+    </section>
+
+  </main>
+
+  <!-- Clean Minimal Footer -->
+  <footer class="w-full bg-white border-t border-slate-200/80 py-3.5 text-center text-xs text-slate-400">
+    PolyScribe AI &bull; Multilingual Handwritten Note Recognition &amp; Translation &bull; Major Project 2026
+  </footer>
+
+  <!-- Frontend JavaScript Logic -->
+  <script>
+    let currentSelectedFile = null;
+    let currentModelMode = 'custom'; // 'custom' or 'baseline'
+    let currentScriptHint = 'auto'; // 'auto', 'kannada', 'tamil', 'telugu', 'arabic', 'german', 'devanagari'
+    let lastPredictionData = null;
+
+    // Script Hint Selection Handler
+    function setScriptHint(script) {
+      currentScriptHint = script;
+      
+      // Update UI chips in State 1
+      document.querySelectorAll('.script-chip').forEach(btn => {
+        btn.className = 'script-chip px-3.5 py-1.5 rounded-full text-xs font-semibold border transition shadow-xs bg-white text-slate-700 border-slate-200 hover:border-indigo-300';
+      });
+      const activeBtn = document.getElementById(`chip-${script}`);
+      if (activeBtn) {
+        activeBtn.className = 'script-chip px-3.5 py-1.5 rounded-full text-xs font-bold border transition shadow-xs bg-indigo-600 text-white border-indigo-600';
+      }
+
+      // Update UI chips in State 2
+      syncStripChips(script);
+    }
+
+    function syncStripChips(script) {
+      document.querySelectorAll('.strip-chip').forEach(btn => {
+        btn.className = 'strip-chip px-2.5 py-1 rounded-lg text-xs font-semibold border transition bg-white text-slate-700 border-slate-200 hover:border-indigo-300';
+      });
+      const activeStripBtn = document.getElementById(`strip-chip-${script}`);
+      if (activeStripBtn) {
+        activeStripBtn.className = 'strip-chip px-2.5 py-1 rounded-lg text-xs font-bold border transition bg-indigo-600 text-white border-indigo-600';
+      }
+    }
+
+    function setScriptHintAndRerun(script) {
+      setScriptHint(script);
+      if (currentSelectedFile) {
+        runInference(currentSelectedFile);
+      }
+    }
+
+    // Model selection
+    function setModelMode(mode) {
+      currentModelMode = mode;
+      const customBtn = document.getElementById('toggleCustomBtn');
+      const baseBtn = document.getElementById('toggleBaseBtn');
+
+      if (mode === 'custom') {
+        customBtn.className = 'px-3 py-1 rounded-lg bg-white text-indigo-600 shadow-sm font-bold transition';
+        baseBtn.className = 'px-3 py-1 rounded-lg text-slate-600 hover:text-slate-900 transition';
+      } else {
+        baseBtn.className = 'px-3 py-1 rounded-lg bg-white text-slate-900 shadow-sm font-bold transition';
+        customBtn.className = 'px-3 py-1 rounded-lg text-slate-600 hover:text-slate-900 transition';
+      }
+
+      // If an image is already loaded, re-analyze with new mode
+      if (currentSelectedFile && !document.getElementById('state2').classList.contains('hidden')) {
+        runInference(currentSelectedFile);
+      }
+    }
+
+    // Switch between State 1 and State 2
+    function switchToState2(previewSrc, fileName) {
+      document.getElementById('state1').classList.add('hidden');
+      const state2 = document.getElementById('state2');
+      state2.classList.remove('hidden');
+
+      document.getElementById('stripThumbnail').src = previewSrc;
+      document.getElementById('stripFileName').innerText = fileName || 'Uploaded Manuscript Note';
+      document.getElementById('stripMetaText').innerText = 'Analyzing with PolyScribe AI pipeline...';
+
+      // Set left column preview
+      document.getElementById('resultImagePreview').src = previewSrc;
+    }
+
+    function resetToState1() {
+      currentSelectedFile = null;
+      lastPredictionData = null;
+      document.getElementById('fileInput').value = '';
+      document.getElementById('cameraInput').value = '';
+
+      document.getElementById('state2').classList.add('hidden');
+      document.getElementById('resultsContainer').classList.add('hidden');
+      document.getElementById('state1').classList.remove('hidden');
+    }
+
+    // File Input Handlers
+    function handleFileSelect(e) {
+      const file = e.target.files[0];
+      if (file) {
+        currentSelectedFile = file;
+        const reader = new FileReader();
+        reader.onload = function(evt) {
+          switchToState2(evt.target.result, file.name);
+          runInference(file);
+        };
+        reader.readAsDataURL(file);
+      }
+    }
+
+    // Drag and Drop
+    const dropZone = document.getElementById('dropZone');
+    ['dragenter', 'dragover'].forEach(eventName => {
+      dropZone.addEventListener(eventName, (e) => {
+        e.preventDefault();
+        dropZone.classList.add('border-indigo-500', 'bg-indigo-50/30');
+      });
+    });
+    ['dragleave', 'drop'].forEach(eventName => {
+      dropZone.addEventListener(eventName, (e) => {
+        e.preventDefault();
+        dropZone.classList.remove('border-indigo-500', 'bg-indigo-50/30');
+      });
+    });
+    dropZone.addEventListener('drop', (e) => {
+      const file = e.dataTransfer.files[0];
+      if (file && file.type.startsWith('image/')) {
+        currentSelectedFile = file;
+        const reader = new FileReader();
+        reader.onload = (evt) => {
+          switchToState2(evt.target.result, file.name);
+          runInference(file);
+        };
+        reader.readAsDataURL(file);
+      }
+    });
+
+    // Sample Loader from Language Chips
+    async function loadSample(sampleId) {
+      setScriptHint(sampleId);
+      const sampleUrl = `sample_data/sample_${sampleId}.png`;
+      switchToState2(sampleUrl, `Sample Note: ${sampleId.toUpperCase()}`);
+      
+      const formData = new FormData();
+      formData.append('sample_id', sampleId);
+      formData.append('script_hint', sampleId);
+      formData.append('model_mode', currentModelMode);
+      formData.append('confidence_threshold', 0.35);
+      formData.append('deskew', true);
+      formData.append('denoise', true);
+      formData.append('binarize', true);
+
+      startStepper();
+      try {
+        const resp = await fetch('/predict', {
+          method: 'POST',
+          body: formData,
+        });
+        if (!resp.ok) {
+          throw new Error('Sample inference failed');
+        }
+        const data = await resp.json();
+        renderResults(data);
+      } catch (err) {
+        alert('Error analyzing sample: ' + err.message);
+      }
+    }
+
+    // Stepper Animation
+    function startStepper() {
+      document.getElementById('resultsContainer').classList.add('hidden');
+      document.getElementById('stepperTotalTime').innerText = 'Running...';
+
+      const steps = ['stepPreprocess', 'stepScript', 'stepOCR', 'stepTranslate'];
+      steps.forEach(id => {
+        const el = document.getElementById(id);
+        el.className = 'p-3 rounded-xl border border-indigo-200 bg-indigo-50/40 animate-pulse transition-all';
+        el.querySelector('.step-icon').innerText = '⏳';
+        el.querySelector('.step-time').innerText = 'Processing...';
+      });
+    }
+
+    function updateStepperFinished(timing) {
+      const t = timing || {};
+      
+      const updateStep = (id, ms) => {
+        const el = document.getElementById(id);
+        el.className = 'p-3 rounded-xl border border-slate-200 bg-white shadow-xs transition-all';
+        el.querySelector('.step-icon').innerText = '✓';
+        el.querySelector('.step-icon').className = 'step-icon text-xs font-bold text-emerald-600';
+        el.querySelector('.step-time').innerText = `${ms || 0} ms`;
+        el.querySelector('.step-time').className = 'step-time text-[11px] font-mono text-emerald-700 font-semibold mt-0.5';
+      };
+
+      updateStep('stepPreprocess', t.preprocess_ms);
+      updateStep('stepScript', t.script_classifier_ms);
+      updateStep('stepOCR', t.ocr_ms);
+      updateStep('stepTranslate', t.translation_ms);
+
+      document.getElementById('stepperTotalTime').innerText = `Total: ${t.total_ms || 0}ms`;
+    }
+
+    // Run Inference
+    async function runInference(file) {
+      startStepper();
+      const formData = new FormData();
+      formData.append('file', file);
+      if (currentScriptHint && currentScriptHint !== 'auto') {
+        formData.append('script_hint', currentScriptHint);
+      }
+      formData.append('model_mode', currentModelMode);
+      formData.append('confidence_threshold', 0.35);
+      formData.append('deskew', true);
+      formData.append('denoise', true);
+      formData.append('binarize', true);
+
+      try {
+        const resp = await fetch('/predict', {
+          method: 'POST',
+          body: formData,
+        });
+        if (!resp.ok) {
+          const errData = await resp.json();
+          throw new Error(errData.detail || 'Inference request failed');
+        }
+        const data = await resp.json();
+        renderResults(data);
+      } catch (err) {
+        alert('Analysis Error: ' + err.message);
+      }
+    }
+
+    // Render Results in 2-Column Card
+    function renderResults(data) {
+      lastPredictionData = data;
+      updateStepperFinished(data.timing);
+
+      document.getElementById('stripMetaText').innerText = `${data.detected_script} Manuscript &bull; ${data.detected_language} (${Math.round((data.confidence || 0) * 100)}%)`;
+      document.getElementById('metaEngineUsed').innerText = `Engine: ${data.engine_used || 'Custom CRNN'}`;
+      document.getElementById('badgeScript').innerText = `Script: ${data.detected_script}`;
+
+      // 1. Language Badge with Confidence
+      const langBadge = document.getElementById('badgeLanguage');
+      const confPct = Math.round((data.confidence || 0) * 100);
+
+      if (data.is_uncertain) {
+        langBadge.className = 'px-3.5 py-1 rounded-full text-xs font-extrabold bg-amber-500 text-white shadow-xs flex items-center gap-1.5';
+        langBadge.innerHTML = `⚠️ Uncertain (${confPct}%)`;
+      } else {
+        langBadge.className = 'px-3.5 py-1 rounded-full text-xs font-extrabold bg-emerald-600 text-white shadow-xs flex items-center gap-1.5';
+        langBadge.innerHTML = `✓ ${data.detected_language} (${data.language_native_name || data.detected_language}) &bull; ${confPct}%`;
+      }
+
+      // 2. Recognized Text Output with Greying-out Low-Confidence Lines
+      const recOutput = document.getElementById('recognizedTextOutput');
+      const dirBadge = document.getElementById('textDirectionBadge');
+      const isArabic = (data.detected_language === 'Arabic' || data.detected_script === 'Arabic');
+
+      if (isArabic) {
+        recOutput.setAttribute('dir', 'rtl');
+        recOutput.style.textAlign = 'right';
+        recOutput.style.fontFamily = "'Amiri', serif";
+        recOutput.style.fontSize = '1.05rem';
+        dirBadge.innerText = 'RTL (Arabic)';
+        dirBadge.className = 'text-[10px] bg-emerald-50 text-emerald-800 border border-emerald-200 px-2 py-0.5 rounded font-mono font-bold';
+      } else {
+        recOutput.setAttribute('dir', 'ltr');
+        recOutput.style.textAlign = 'left';
+        recOutput.style.fontFamily = 'inherit';
+        recOutput.style.fontSize = '0.875rem';
+        dirBadge.innerText = 'LTR';
+        dirBadge.className = 'text-[10px] bg-slate-100 text-slate-600 px-2 py-0.5 rounded font-mono';
+      }
+
+      const hasText = data.recognized_text && data.recognized_text.trim().length > 0;
+      recOutput.innerHTML = '';
+
+      if (!hasText) {
+        recOutput.innerHTML = `
+          <div class="p-3 bg-amber-50 border border-amber-200 rounded-xl text-amber-900 text-xs font-medium flex items-center gap-2">
+            <span>⚠️</span>
+            <span>Could not recognize text in this image. Please check image contrast or click a specific language chip above.</span>
+          </div>
+        `;
+      } else if (data.lines && data.lines.length > 0) {
+        const linesList = document.createElement('div');
+        linesList.className = 'space-y-1.5';
+
+        data.lines.forEach(l => {
+          const isLow = l.is_low_confidence || (l.passed_gate === false);
+          const lineRow = document.createElement('div');
+          
+          lineRow.className = isLow
+            ? 'p-2.5 rounded-xl bg-slate-100 border border-slate-300 border-l-4 border-l-slate-400 opacity-60 flex flex-wrap items-center justify-between gap-2'
+            : 'p-2.5 rounded-xl bg-white border border-slate-200/90 border-l-4 border-l-emerald-500 shadow-xs flex flex-wrap items-center justify-between gap-2';
+
+          const textSpan = document.createElement('span');
+          textSpan.className = isLow
+            ? 'font-medium text-slate-400 text-xs flex-1 line-through italic'
+            : 'font-medium text-slate-800 text-xs flex-1';
+          textSpan.innerText = l.text || '(empty)';
+
+          const confBadge = document.createElement('span');
+          const pct = Math.round((l.confidence || 0) * 100);
+          confBadge.className = isLow
+            ? 'px-2 py-0.5 rounded text-[10px] font-bold bg-slate-200 text-slate-600 border border-slate-300 whitespace-nowrap'
+            : 'px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-50 text-emerald-800 border border-emerald-200 whitespace-nowrap';
+          confBadge.innerHTML = isLow ? `⚠️ ${pct}% (Low Confidence)` : `✓ ${pct}%`;
+
+          lineRow.appendChild(textSpan);
+          lineRow.appendChild(confBadge);
+          linesList.appendChild(lineRow);
+        });
+        recOutput.appendChild(linesList);
+      } else {
+        recOutput.innerText = data.recognized_text;
+      }
+
+      // 3. Translation Output
+      const transOutput = document.getElementById('translationOutput');
+      if (data.translated_text === "Could not reliably recognize this text" || data.warning === "Could not reliably recognize this text") {
+        transOutput.innerHTML = `
+          <div class="p-3.5 bg-amber-50 border border-amber-300/80 rounded-xl text-amber-900 text-xs font-medium flex items-start gap-2.5">
+            <span class="text-base leading-none">⚠️</span>
+            <div>
+              <strong class="block font-semibold">Could not reliably recognize this text</strong>
+              <span class="text-amber-800 text-[11px] block mt-0.5">All detected lines fell below the reliability threshold. You can manually select the correct language above to override auto-detection.</span>
+            </div>
+          </div>
+        `;
+      } else {
+        transOutput.innerText = data.translated_text || '(Source is already English or translation identical)';
+      }
+
+      // Reveal Results Card with smooth fade-in
+      document.getElementById('resultsContainer').classList.remove('hidden');
+    }
+
+    // Export Reports
+    async function downloadReport(format) {
+      if (!lastPredictionData) {
+        alert('Please analyze a manuscript first.');
+        return;
+      }
+      const formData = new FormData();
+      formData.append('title', `${lastPredictionData.detected_language} Note Translation`);
+      formData.append('detected_language', lastPredictionData.detected_language || 'Unknown');
+      formData.append('detected_script', lastPredictionData.detected_script || 'Unknown');
+      formData.append('confidence', lastPredictionData.confidence || 0);
+      formData.append('recognized_text', lastPredictionData.recognized_text || '');
+      formData.append('translated_text', lastPredictionData.translated_text || '');
+      formData.append('format', format);
+
+      try {
+        const resp = await fetch('/api/download', {
+          method: 'POST',
+          body: formData,
+        });
+        if (!resp.ok) throw new Error('Download failed');
+        const blob = await resp.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = format === 'pdf' ? 'polyscribe_translation.pdf' : 'polyscribe_translation.txt';
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        a.remove();
+      } catch (err) {
+        alert('Download Error: ' + err.message);
+      }
+    }
+
+    // Clipboard Copy
+    function copyToClipboard(elementId, btn) {
+      const text = document.getElementById(elementId).innerText;
+      navigator.clipboard.writeText(text).then(() => {
+        const originalHtml = btn.innerHTML;
+        btn.innerHTML = `<span>Copied! ✓</span>`;
+        setTimeout(() => btn.innerHTML = originalHtml, 1500);
+      });
+    }
+  </script>
+</body>
+</html>

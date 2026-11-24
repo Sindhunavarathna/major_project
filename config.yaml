@@ -1,0 +1,99 @@
+models:
+  trocr:
+    sanskrit_model_path: "models/sanskrit_trocr"
+    latin_handwritten: "microsoft/trocr-base-handwritten"
+    latin_printed: "microsoft/trocr-base-printed"
+    base_model_name: "microsoft/trocr-base-handwritten"
+    fallback_model_name: "microsoft/trocr-small-handwritten"
+  translation:
+    model_name: "facebook/mbart-large-50-many-to-many-mmt"
+    max_length: 256
+    num_beams_cpu: 1
+    num_beams_gpu: 4
+  language_classifier:
+    model_path: "models/language_classifier/language_nb.pkl"
+
+debug:
+  enabled: false
+  output_dir: "debug"
+
+detection:
+  min_crop_height: 12
+  min_crop_width: 25
+  min_crop_area: 300
+  min_detection_confidence: 0.25
+  padding_px: 6
+  line_merge_vertical_overlap_ratio: 0.40
+
+quality_gating:
+  min_characters: 4
+  min_letter_ratio: 0.45
+  min_mean_token_confidence: 0.35      # Calibrated for historical manuscript handwriting (35%+)
+  easyocr_min_confidence: 0.25        # EasyOCR word confidence is calibrated differently (lower raw scores are normal)
+
+ocr:
+  confidence_threshold: 0.35
+  low_confidence_threshold: 0.50
+  easyocr:
+    gpu: auto
+    languages:
+      - "en"
+      - "hi"
+      - "kn"
+  tesseract:
+    tesseract_cmd: "C:\\Program Files\\Tesseract-OCR\\tesseract.exe"
+    default_lang: "eng"
+    oem: 3
+    psm: 3
+
+preprocessing:
+  denoise_strength: 10
+  adaptive_block_size: 15
+  adaptive_c: 4
+  max_deskew_angle: 45.0
+  min_line_height: 16
+
+langid:
+  min_text_len: 2
+  confidence_threshold: 0.50
+  script_detection: true
+
+languages:
+  supported_ocr:
+    en: "English"
+    hi: "Hindi"
+    kn: "Kannada"
+    sa: "Sanskrit"
+    ta: "Tamil"
+    te: "Telugu"
+    ar: "Arabic"
+    mr: "Marathi"
+    bn: "Bengali"
+  mbart_codes:
+    en: "en_XX"
+    hi: "hi_IN"
+    ta: "ta_IN"
+    te: "te_IN"
+    mr: "mr_IN"
+    bn: "bn_IN"
+    gu: "gu_IN"
+    ml: "ml_IN"
+    ur: "ur_PK"
+    ne: "ne_NP"
+    si: "si_LK"
+    fr: "fr_XX"
+    de: "de_DE"
+    es: "es_XX"
+    ru: "ru_RU"
+    ar: "ar_AR"
+    zh: "zh_CN"
+    ja: "ja_XX"
+  unsupported_mbart:
+    sa:
+      name: "Sanskrit"
+      default_pivot: "hi"
+      note: "Sanskrit is not in standard mBART-50. Hindi pivot or fine-tuning via scripts/finetune_mbart.py is required."
+    kn:
+      name: "Kannada"
+      default_pivot: null
+      note: "Kannada is not in standard mBART-50. Vocabulary expansion and fine-tuning via scripts/finetune_mbart.py is recommended."

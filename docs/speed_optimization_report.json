@@ -1,0 +1,122 @@
+[
+  {
+    "name": "Kannada Sample",
+    "path": "sample_data/sample_kannada.png",
+    "detected_language": "English",
+    "detected_script": "Latin",
+    "custom_timing": {
+      "preprocess_ms": 46.49,
+      "script_classifier_ms": 12.28,
+      "ocr_ms": 11684.76,
+      "language_id_ms": 0.44,
+      "translation_ms": 0.0,
+      "total_ms": 11744.0
+    },
+    "baseline_timing": {
+      "preprocess_ms": 11.35,
+      "script_classifier_ms": 10.04,
+      "ocr_ms": 4199.06,
+      "language_id_ms": 0.26,
+      "translation_ms": 12425.91,
+      "total_ms": 16646.64
+    },
+    "wall_clock_custom_ms": 11744.1,
+    "wall_clock_baseline_ms": 16646.7
+  },
+  {
+    "name": "Tamil Sample",
+    "path": "sample_data/sample_tamil.png",
+    "detected_language": "English",
+    "detected_script": "Latin",
+    "custom_timing": {
+      "preprocess_ms": 26.1,
+      "script_classifier_ms": 29.43,
+      "ocr_ms": 3562.95,
+      "language_id_ms": 0.08,
+      "translation_ms": 0.0,
+      "total_ms": 3618.59
+    },
+    "baseline_timing": {
+      "preprocess_ms": 20.9,
+      "script_classifier_ms": 12.76,
+      "ocr_ms": 998.34,
+      "language_id_ms": 407.32,
+      "translation_ms": 0.0,
+      "total_ms": 1439.33
+    },
+    "wall_clock_custom_ms": 3618.67,
+    "wall_clock_baseline_ms": 1439.4
+  },
+  {
+    "name": "Telugu Sample",
+    "path": "sample_data/sample_telugu.png",
+    "detected_language": "English",
+    "detected_script": "Latin",
+    "custom_timing": {
+      "preprocess_ms": 11.46,
+      "script_classifier_ms": 14.41,
+      "ocr_ms": 2380.51,
+      "language_id_ms": 0.06,
+      "translation_ms": 0.0,
+      "total_ms": 2406.44
+    },
+    "baseline_timing": {
+      "preprocess_ms": 10.05,
+      "script_classifier_ms": 9.53,
+      "ocr_ms": 1023.18,
+      "language_id_ms": 0.27,
+      "translation_ms": 1684.19,
+      "total_ms": 2727.24
+    },
+    "wall_clock_custom_ms": 2406.49,
+    "wall_clock_baseline_ms": 2727.29
+  },
+  {
+    "name": "Arabic Sample",
+    "path": "sample_data/sample_arabic.png",
+    "detected_language": "English",
+    "detected_script": "Latin",
+    "custom_timing": {
+      "preprocess_ms": 66.27,
+      "script_classifier_ms": 9.84,
+      "ocr_ms": 5951.61,
+      "language_id_ms": 0.09,
+      "translation_ms": 0.0,
+      "total_ms": 6027.83
+    },
+    "baseline_timing": {
+      "preprocess_ms": 22.99,
+      "script_classifier_ms": 12.71,
+      "ocr_ms": 1033.41,
+      "language_id_ms": 0.34,
+      "translation_ms": 1706.84,
+      "total_ms": 2776.31
+    },
+    "wall_clock_custom_ms": 6027.91,
+    "wall_clock_baseline_ms": 2776.39
+  },
+  {
+    "name": "German Sample",
+    "path": "sample_data/sample_german.png",
+    "detected_language": "English",
+    "detected_script": "Latin",
+    "custom_timing": {
+      "preprocess_ms": 72.97,
+      "script_classifier_ms": 12.52,
+      "ocr_ms": 1660.67,
+      "language_id_ms": 0.17,
+      "translation_ms": 0.0,
+      "total_ms": 1746.34
+    },
+    "baseline_timing": {
+      "preprocess_ms": 12.76,
+      "script_classifier_ms": 11.32,
+      "ocr_ms": 1542.47,
+      "language_id_ms": 0.07,
+      "translation_ms": 2.55,
+      "total_ms": 1569.18
+    },
+    "wall_clock_custom_ms": 1746.39,
+    "wall_clock_baseline_ms": 1569.24
+  }
+]

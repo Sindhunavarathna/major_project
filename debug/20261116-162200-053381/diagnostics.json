@@ -1,0 +1,87 @@
+{
+  "timestamp": "20261116-162200-053381",
+  "input_dimensions": [
+    400,
+    120
+  ],
+  "line_count": 1,
+  "ocr_result": {
+    "text": "Valid manuscript text for testing",
+    "confidence": 0.92,
+    "engine": "MockEngine",
+    "is_fallback": false,
+    "warning": null,
+    "raw_details": {}
+  },
+  "quality_check": {
+    "is_reliable": true,
+    "can_translate": true,
+    "char_count": 29,
+    "letter_count": 29,
+    "letter_ratio": 1.0,
+    "mean_confidence": 0.92,
+    "warning": null,
+    "details": {
+      "reasons": [],
+      "is_pure_symbols": false
+    }
+  },
+  "langid_result": {
+    "script": "Latin",
+    "script_confidence": 1.0,
+    "language": "en",
+    "language_name": "English",
+    "confidence": 1.0,
+    "is_uncertain": false,
+    "top_candidates": [
+      {
+        "language": "en",
+        "language_name": "English",
+        "probability": 1.0
+      },
+      {
+        "language": "fr",
+        "language_name": "French",
+        "probability": 0.0
+      },
+      {
+        "language": "es",
+        "language_name": "Spanish",
+        "probability": 0.0
+      }
+    ],
+    "secondary_method": {
+      "method": "langdetect",
+      "language": "ro",
+      "language_name": "RO",
+      "confidence": 0.5714
+    },
+    "notes": null
+  },
+  "lines": [
+    {
+      "line_index": 1,
+      "bbox_xyxy": [
+        10,
+        10,
+        100,
+        40
+      ],
+      "crop_size_px": [
+        90,
+        30
+      ],
+      "crop_file": "crop_001.png",
+      "detection_confidence": 0.95,
+      "word_count": 2
+    }
+  ],
+  "extra": {
+    "preprocessing": {
+      "deskew_applied": false,
+      "skew_angle": 0.0,
+      "denoise_applied": true,
+      "binarize_applied": false
+    }
+  }
+}

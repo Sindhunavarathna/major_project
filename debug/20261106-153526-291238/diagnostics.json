@@ -1,0 +1,28 @@
+{
+  "input_size_px": [
+    800,
+    200
+  ],
+  "processed_size_px": [
+    800,
+    200
+  ],
+  "preprocessing": {
+    "deskew_applied": false,
+    "skew_angle": 0.0,
+    "denoise_applied": true,
+    "binarize_applied": false
+  },
+  "easyocr": {
+    "text": "",
+    "confidence": 0.0,
+    "warning": "EasyOCR error: 'charmap' codec can't encode character '\\u2588' in position 12: character maps to <undefined>",
+    "region_count": 0
+  },
+  "regions": [],
+  "artifacts": {
+    "original": "original.png",
+    "processed": "processed.png",
+    "easyocr_boxes": "easyocr_boxes.png"
+  }
+}

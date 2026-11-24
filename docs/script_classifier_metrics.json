@@ -1,0 +1,82 @@
+{
+  "overall_accuracy": 0.5752,
+  "total_test_samples": 113,
+  "correct_predictions": 65,
+  "classes": [
+    "Kannada",
+    "Tamil",
+    "Telugu",
+    "Arabic",
+    "Latin"
+  ],
+  "confusion_matrix": [
+    [
+      19,
+      4,
+      0,
+      0,
+      0
+    ],
+    [
+      22,
+      5,
+      1,
+      0,
+      0
+    ],
+    [
+      15,
+      4,
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      0,
+      0,
+      14,
+      1
+    ],
+    [
+      0,
+      0,
+      0,
+      1,
+      27
+    ]
+  ],
+  "per_class_metrics": {
+    "Kannada": {
+      "samples": 23,
+      "precision": 0.3393,
+      "recall": 0.8261,
+      "f1_score": 0.481
+    },
+    "Tamil": {
+      "samples": 28,
+      "precision": 0.3846,
+      "recall": 0.1786,
+      "f1_score": 0.2439
+    },
+    "Telugu": {
+      "samples": 19,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1_score": 0.0
+    },
+    "Arabic": {
+      "samples": 15,
+      "precision": 0.9333,
+      "recall": 0.9333,
+      "f1_score": 0.9333
+    },
+    "Latin": {
+      "samples": 28,
+      "precision": 0.9643,
+      "recall": 0.9643,
+      "f1_score": 0.9643
+    }
+  },
+  "confusion_matrix_image": "docs\\script_classifier_confusion_matrix.png"
+}
