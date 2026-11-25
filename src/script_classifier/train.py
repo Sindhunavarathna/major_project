@@ -138,6 +138,7 @@ if __name__ == "__main__":
     parser.add_argument("--lr", type=float, default=1e-3, help="Learning rate")
     parser.add_argument("--samples-per-class", type=int, default=150, help="Samples generated per class")
     parser.add_argument("--save-dir", type=str, default="models/script_classifier", help="Save directory")
+    parser.add_argument("--device", type=str, default="cuda" if torch.cuda.is_available() else "cpu", help="Device (cpu or cuda)")
     args = parser.parse_args()
 
     train_classifier(
@@ -146,4 +147,5 @@ if __name__ == "__main__":
         lr=args.lr,
         samples_per_class=args.samples_per_class,
         save_dir=args.save_dir,
+        device=args.device,
     )

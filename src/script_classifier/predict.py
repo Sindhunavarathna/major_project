@@ -28,6 +28,10 @@ class ScriptPrediction:
     probabilities: Dict[str, float]
     raw_logits: Optional[list] = None
 
+    @property
+    def predicted_class(self) -> str:
+        return self.script
+
 
 class ScriptClassifier:
     """Wrapper for running inference using the trained PyTorch ScriptClassifierCNN."""

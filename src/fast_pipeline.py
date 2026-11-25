@@ -486,11 +486,14 @@ class FastPipelineManager:
             if not recognized_text and self.easyocr:
                 lang_code_map = {"Kannada": "kn", "Tamil": "ta", "Telugu": "te"}
                 l_code = lang_code_map.get(effective_script, "kn")
-                easy_fb = self.easyocr.recognize(img, lang=l_code)
-                if easy_fb.text and easy_fb.text.strip():
-                    recognized_text = easy_fb.text.strip()
-                    ocr_confidence = easy_fb.confidence
-                    engine_used = f"Fallback: EasyOCR ({effective_script})"
+                try:
+                    easy_fb = self.easyocr.recognize(img, lang=l_code)
+                    if easy_fb.text and easy_fb.text.strip():
+                        recognized_text = easy_fb.text.strip()
+                        ocr_confidence = easy_fb.confidence
+                        engine_used = f"Fallback: EasyOCR ({effective_script})"
+                except Exception as fb_err:
+                    LOGGER.warning("EasyOCR fallback for %s failed: %s", effective_script, fb_err)
 
         elif is_custom and effective_script == "Latin" and self.trocr:
             chosen_key = "latin_printed" if input_type.lower() == "printed" else "latin_handwritten"

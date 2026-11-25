@@ -65,15 +65,29 @@ SCRIPT_TEXT_CORPUS: Dict[str, List[str]] = {
 }
 
 
-def _get_system_font(size: int = 32) -> ImageFont.ImageFont:
-    """Attempt to locate a multi-script TTF font on Windows; fallback to default."""
-    candidate_fonts = [
-        r"C:\Windows\Fonts\Nirmala.ttf",
-        r"C:\Windows\Fonts\Arial.ttf",
-        r"C:\Windows\Fonts\SegUIReg.ttf",
-        r"C:\Windows\Fonts\times.ttf",
-        r"C:\Windows\Fonts\tahoma.ttf",
-    ]
+def _get_system_font(script: str = "Latin", size: int = 32) -> ImageFont.ImageFont:
+    """Attempt to locate a multi-script TTF/TTC font on Windows; fallback to default."""
+    if script in ("Kannada", "Tamil", "Telugu", "Devanagari"):
+        candidate_fonts = [
+            r"C:\Windows\Fonts\Nirmala.ttc",
+            r"C:\Windows\Fonts\ARIALUNI.ttf",
+            r"C:\Windows\Fonts\arial.ttf",
+        ]
+    elif script == "Arabic":
+        candidate_fonts = [
+            r"C:\Windows\Fonts\tahoma.ttf",
+            r"C:\Windows\Fonts\arial.ttf",
+            r"C:\Windows\Fonts\segoeui.ttf",
+            r"C:\Windows\Fonts\ARIALUNI.ttf",
+        ]
+    else:  # Latin / German / English
+        candidate_fonts = [
+            r"C:\Windows\Fonts\segoepr.ttf",
+            r"C:\Windows\Fonts\arial.ttf",
+            r"C:\Windows\Fonts\tahoma.ttf",
+            r"C:\Windows\Fonts\times.ttf",
+        ]
+
     for fp in candidate_fonts:
         if os.path.exists(fp):
             try:
@@ -87,9 +101,10 @@ def render_script_patch(
     text: str,
     target_size: Tuple[int, int] = (128, 128),
     font_size: int = 34,
+    script: str = "Latin",
 ) -> np.ndarray:
     """Render a text sample onto a realistic parchment-like single-channel 128x128 patch."""
-    font = _get_system_font(font_size)
+    font = _get_system_font(script=script, size=font_size)
     bg_color = random.randint(235, 255)
     ink_color = random.randint(15, 60)
 
@@ -180,11 +195,47 @@ class ScriptDataset(Dataset):
         return tensor, label
 
 
+def _sample_real_manuscript_crops(class_name: str, n_crops: int = 30) -> List[np.ndarray]:
+    """Sample authentic patches from sample_data/ files to ground the classifier."""
+    sample_files_map = {
+        "Kannada": ["sample_kannada.png", "sample_kannada_palmleaf.png", "user_kuvempu_kannada.png"],
+        "Tamil": ["sample_tamil.png"],
+        "Telugu": ["sample_telugu.png"],
+        "Arabic": ["sample_arabic.png", "user_arabic_manuscript.png"],
+        "Latin": ["sample_german.png", "sample_german_kurrent.png", "sample_english.png", "sample_latin.png"],
+        "Devanagari": ["sample_sanskrit.png", "sample_sanskrit_devi_mahatmyam.png", "sample_hindi.png"],
+    }
+    crops = []
+    fnames = sample_files_map.get(class_name, [])
+    for fn in fnames:
+        p = os.path.join("sample_data", fn)
+        if not os.path.exists(p):
+            continue
+        try:
+            img = cv2.imread(p, cv2.IMREAD_GRAYSCALE)
+            if img is None or img.size == 0:
+                continue
+            h, w = img.shape
+            if h < 64 or w < 64:
+                continue
+            for _ in range(n_crops // max(1, len(fnames))):
+                if h <= 128 or w <= 128:
+                    c = cv2.resize(img, (128, 128), interpolation=cv2.INTER_AREA)
+                else:
+                    y = random.randint(0, h - 128)
+                    x = random.randint(0, w - 128)
+                    c = img[y : y + 128, x : x + 128]
+                crops.append(c)
+        except Exception:
+            continue
+    return crops
+
+
 def generate_synthetic_script_data(
-    samples_per_class: int = 150,
+    samples_per_class: int = 200,
     seed: int = 42,
 ) -> Tuple[List[np.ndarray], List[int]]:
-    """Synthesize diverse manuscript script patches across all 5 classes."""
+    """Synthesize diverse manuscript script patches across all classes."""
     random.seed(seed)
     np.random.seed(seed)
 
@@ -192,15 +243,22 @@ def generate_synthetic_script_data(
     all_labels: List[int] = []
 
     for class_name, class_idx in CLASS_TO_IDX.items():
+        # 1. Authentic manuscript crops
+        real_crops = _sample_real_manuscript_crops(class_name, n_crops=40)
+        for crop in real_crops:
+            crop_aug = apply_handwriting_augmentations(crop)
+            all_patches.append(crop_aug)
+            all_labels.append(class_idx)
+
+        # 2. Diverse rendered synthetic words
         corpus = SCRIPT_TEXT_CORPUS.get(class_name, ["test"])
         for i in range(samples_per_class):
             word = random.choice(corpus)
-            # Sometimes render 2-word combinations
             if random.random() < 0.35 and len(corpus) > 1:
                 word = f"{word} {random.choice(corpus)}"
 
             font_sz = random.randint(24, 38)
-            patch = render_script_patch(word, target_size=(128, 128), font_size=font_sz)
+            patch = render_script_patch(word, target_size=(128, 128), font_size=font_sz, script=class_name)
             patch = apply_handwriting_augmentations(patch)
             all_patches.append(patch)
             all_labels.append(class_idx)

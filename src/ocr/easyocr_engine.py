@@ -74,6 +74,18 @@ class EasyOCREngine(BaseOCREngine):
             reader_kwargs["model_storage_directory"] = str(local_models_dir)
             reader_kwargs["user_network_directory"] = str(local_models_dir)
 
+            if lang_key == "ta":
+                try:
+                    from easyocr.config import recognition_models
+                    m_ta = recognition_models["gen1"]["tamil_g1"]
+                    chars_ta = list(m_ta["characters"])
+                    if len(chars_ta) < 142:
+                        diff = 142 - len(chars_ta)
+                        dummy_chars = [chr(0x2400 + i) for i in range(diff)]
+                        m_ta["characters"] = "".join(chars_ta) + "".join(dummy_chars)
+                except Exception as ta_fix_err:
+                    LOGGER.debug("Tamil character padding check: %s", ta_fix_err)
+
             self._readers[lang_key] = easyocr.Reader(lang_list, **reader_kwargs)
 
         return self._readers[lang_key]
