@@ -332,7 +332,7 @@ class FastPipelineManager:
         script_hint: Optional[str] = None,
         input_type: str = "auto",  # 'auto', 'handwritten', 'printed'
         enable_cloud_bridge: bool = False,  # Strict offline translation by default
-        confidence_threshold: float = 0.35,  # Confidence gate threshold before translation
+        confidence_threshold: float = 0.10,  # Confidence gate threshold before translation
         deskew: bool = True,
         denoise: bool = True,
         binarize: bool = True,
@@ -407,20 +407,24 @@ class FastPipelineManager:
                         effective_script = k.capitalize()
                     break
         elif self.easyocr and (cnn_script == "Unknown" or cnn_confidence < 0.70):
-            # Fast thumbnail probe across all candidate scripts when CNN classifier is uncertain
+            # Fast thumbnail probe across candidate scripts when CNN classifier is uncertain
             try:
+                p_ar = self.easyocr.recognize(probe_img, lang="ar", canvas_size=384, batch_size=8)
                 p_lat = self.easyocr.recognize(probe_img, lang="de", canvas_size=384, batch_size=8)
                 p_kn = self.easyocr.recognize(probe_img, lang="kn", canvas_size=384, batch_size=8)
                 p_te = self.easyocr.recognize(probe_img, lang="te", canvas_size=384, batch_size=8)
+                p_ta = self.easyocr.recognize(probe_img, lang="ta", canvas_size=384, batch_size=8)
 
+                ar_count = sum(1 for ch in (p_ar.text or "") if 0x0600 <= ord(ch) <= 0x06FF)
                 lat_count = sum(1 for ch in (p_lat.text or "") if ('a' <= ch.lower() <= 'z') or ch in "äöüß")
                 kn_count = sum(1 for ch in (p_kn.text or "") if 0x0C80 <= ord(ch) <= 0x0CFF)
                 te_count = sum(1 for ch in (p_te.text or "") if 0x0C00 <= ord(ch) <= 0x0C7F)
+                ta_count = sum(1 for ch in (p_ta.text or "") if 0x0B80 <= ord(ch) <= 0x0BFF)
 
-                counts = {"Latin": lat_count, "Kannada": kn_count, "Telugu": te_count}
+                counts = {"Arabic": ar_count, "Kannada": kn_count, "Telugu": te_count, "Tamil": ta_count, "Latin": lat_count}
                 best_probe_script, max_count = max(counts.items(), key=lambda x: x[1])
 
-                if max_count >= 10:
+                if max_count >= 6:
                     effective_script = best_probe_script
                     LOGGER.info("Uncertain CNN resolved by probe: %s (%d chars)", effective_script, max_count)
             except Exception as probe_err:
@@ -595,6 +599,32 @@ class FastPipelineManager:
                         "is_low_confidence": c_val < 0.40,
                         "bbox": box_val,
                     })
+
+        # Auto-correction: if in auto mode and recognized text has low script coherence, check Arabic
+        if (not script_hint or script_hint.lower() in ("auto", "none")) and effective_script != "Arabic" and self.easyocr:
+            try:
+                p_ar = self.easyocr.recognize(img, lang="ar", canvas_size=640)
+                ar_count = sum(1 for ch in (p_ar.text or "") if 0x0600 <= ord(ch) <= 0x06FF)
+                curr_chars = sum(1 for ch in recognized_text if ('a' <= ch.lower() <= 'z') or (0x0900 <= ord(ch) <= 0x097F) or (0x0C80 <= ord(ch) <= 0x0CFF) or (0x0C00 <= ord(ch) <= 0x0C7F) or (0x0B80 <= ord(ch) <= 0x0BFF))
+                if ar_count >= 15 and ar_count > curr_chars * 1.5:
+                    LOGGER.info("Auto-corrected script to Arabic (found %d Arabic chars vs %d %s chars)", ar_count, curr_chars, effective_script)
+                    effective_script = "Arabic"
+                    recognized_text = p_ar.text.strip()
+                    ocr_confidence = p_ar.confidence
+                    engine_used = "EasyOCR (Arabic - Auto Recovered)"
+                    line_records.clear()
+                    txt_lines = [l for l in recognized_text.split("\n") if l.strip()]
+                    confs_ar = p_ar.raw_details.get("confidences", [])
+                    for idx, l_txt in enumerate(txt_lines):
+                        c_val = float(confs_ar[idx]) if idx < len(confs_ar) else 0.50
+                        line_records.append({
+                            "line_num": idx + 1,
+                            "text": l_txt,
+                            "confidence": round(c_val, 3),
+                            "is_low_confidence": c_val < 0.10,
+                        })
+            except Exception as auto_ar_err:
+                LOGGER.debug("Auto Arabic check: %s", auto_ar_err)
 
         timing.ocr_ms = (time.perf_counter() - t2) * 1000
 

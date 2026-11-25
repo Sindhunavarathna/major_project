@@ -25,7 +25,7 @@ from src.utils import get_logger
 
 LOGGER = get_logger("confidence_gate")
 
-DEFAULT_CONFIDENCE_THRESHOLD = 0.35
+DEFAULT_CONFIDENCE_THRESHOLD = 0.10
 FALLBACK_UNRELIABLE_MESSAGE = "Could not reliably recognize this text"
 
 
